@@ -1,0 +1,47 @@
+﻿@model IdentityWeb.ViewModels.SignInViewModel
+
+@{
+    ViewData["Title"] = "SignIn";
+}
+
+<h1>SignIn</h1>
+
+<h4>SignInViewModel</h4>
+<hr />
+<div class="row">
+    @if (TempData["ErrorMessage"] is string errorMessage)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @errorMessage
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    <div class="col-md-4"> 
+        <form asp-action="SignIn" method="post" asp-route-returnurl="@Context.Request.Query["returnUrl"]">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="form-group">
+                <label asp-for="Email" class="control-label"></label>
+                <input asp-for="Email" class="form-control" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Password" class="control-label"></label>
+                <input asp-for="Password" class="form-control" />
+                <span asp-validation-for="Password" class="text-danger"></span>
+            </div>
+            <div class="my-2 form-check">
+                <label asp-for="RememberMe" class="form-check-label"></label>
+                <input asp-for="RememberMe" class="form-check-input" />
+                <span asp-validation-for="RememberMe" class="text-danger"></span>
+            </div>
+            <div class="form-group mt-3">
+                <input type="submit" value="SignIn" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="SignUp">Üye değilseniz Üye olunuz...</a>
+</div>
+
