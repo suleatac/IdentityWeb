@@ -22,11 +22,13 @@ namespace IdentityWeb.ViewModels
         [DataType(DataType.Password)]
         [Required(ErrorMessage = "Şifre Boş Geçilemez")]
         [Display(Name = "Şifre :")]
+        [MinLength(6, ErrorMessage = "Şifre En az 6 karakter olabilir.")]
         public string Password { get; set; } = default!;
 
         [Compare(nameof(Password),ErrorMessage ="Şifreler eşleşmemektedir!")]
         [Required(ErrorMessage = "Şifre Tekrarı Boş Geçilemez")]
         [Display(Name = "Şifre Tekrar :")]
+        [MinLength(6, ErrorMessage = "Şifre En az 6 karakter olabilir.")]
         public string PasswordConfirm { get; set; } = default!;
 
     }

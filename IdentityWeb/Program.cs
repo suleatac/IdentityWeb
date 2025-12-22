@@ -1,7 +1,12 @@
 using IdentityWeb.CustomValidations;
 using IdentityWeb.Localization;
 using IdentityWeb.Models;
+using IdentityWeb.OptionsModels;
+using IdentityWeb.Services;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +18,8 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<AppDbContext>(options => {
     options.UseSqlServer(builder.Configuration.GetConnectionString("SqlServer"));
 });
+
+
 
 
 builder.Services.AddIdentity<AppUser, AppRole>(options => {
@@ -32,7 +39,17 @@ builder.Services.AddIdentity<AppUser, AppRole>(options => {
     options.Lockout.MaxFailedAccessAttempts = 3;
 
    
-}).AddPasswordValidator<PasswordValidator>().AddUserValidator<UserValidator>().AddErrorDescriber<LocalizationIdentityErrorDescriber>().AddEntityFrameworkStores<AppDbContext>();
+})
+.AddPasswordValidator<PasswordValidator>()
+.AddUserValidator<UserValidator>()
+.AddErrorDescriber<LocalizationIdentityErrorDescriber>()
+.AddDefaultTokenProviders()
+.AddEntityFrameworkStores<AppDbContext>();
+
+
+
+
+
 
 
 builder.Services.ConfigureApplicationCookie(opt => {
@@ -46,6 +63,24 @@ builder.Services.ConfigureApplicationCookie(opt => {
     //Logout Path
     opt.LogoutPath= new PathString("/Member/LogOut");
 });
+
+
+
+//Email Ayarlarý bu kýsým
+builder.Services.Configure<DataProtectionTokenProviderOptions>(opt => {
+    opt.TokenLifespan = TimeSpan.FromHours(2);
+});
+builder.Services.Configure<EmailOption>(builder.Configuration.GetSection("EmailSettings"));
+
+builder.Services.AddScoped<IEmailService, EmailService>();
+
+
+
+//Kullanýcý resim ekleme iþlemleri
+//Klasöre eriþim için referans noktasý belirlendi
+builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.GetCurrentDirectory()));
+
+
 
 
 

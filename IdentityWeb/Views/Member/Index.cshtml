@@ -1,7 +1,66 @@
 ﻿
 @{
     ViewData["Title"] = "Index";
+    var picturePath = string.IsNullOrWhiteSpace(Model.PictureUrl)
+      ? Url.Content("~/userpictures/default_user_picture.jpeg")
+      : Url.Content($"~/userpictures/{Model.PictureUrl}");
 }
 
 <h1>Hoşgeldin @User.Identity!.Name</h1>
 
+@model UserGeneralViewModel
+
+
+<div class="d-flex align-items-center gap-3 mt-4">
+@*     <img src="@picturePath"
+         class="rounded-circle border"
+         alt="Profil resmi"
+         style="width: 96px; height: 96px; object-fit: cover;" /> *@
+
+
+@* bu ikinci yöntem tag helperli *@
+  <user-picture-thumbnail asp-picture-url="@Model.PictureUrl"/>
+    <div>
+        <div class="fw-semibold">@Model.UserName</div>
+        <div class="text-muted small">@Model.Email</div>
+    </div>
+</div>
+
+<table class="table mt-5">
+    <thead>
+        <tr>
+           
+            <th>
+                @Html.DisplayNameFor(model => model.UserName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.PhoneNumber)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Email)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+       
+            <tr>
+                <td>
+                @Html.DisplayFor(model => model.UserName)
+                </td>
+                <td>
+                @Html.DisplayFor(model => model.PhoneNumber)
+                </td>
+               
+                <td>
+                    @Html.DisplayFor(model => model.Email)
+                </td>
+                @* <td>
+                <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.Id">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.Id">Delete</a>
+            </td> *@
+            </tr>
+        
+    </tbody>
+</table>

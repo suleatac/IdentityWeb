@@ -10,7 +10,7 @@ namespace IdentityWeb.Models
 
         public AppDbContext(DbContextOptions<AppDbContext> options):base(options)
         {}
-
+      
     
 
 
