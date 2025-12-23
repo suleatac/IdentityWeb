@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.FileProviders;
 
+
 namespace IdentityWeb.Controllers
 {
     [Authorize]
@@ -21,7 +22,11 @@ namespace IdentityWeb.Controllers
 
      
         }
-
+        [AllowAnonymous]
+        public IActionResult AccessDenied(string returnUrl)
+        {
+            return View();
+        }
         public async Task<IActionResult> Index()
         {
             var currentUser = await userManager.FindByNameAsync(User.Identity!.Name!);
@@ -38,6 +43,27 @@ namespace IdentityWeb.Controllers
             };
             return View(userViewModel);
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Claims()
+        {
+            var userClaimList = User.Claims
+                .Select(x => new ClaimViewModel {
+                    Issuer = x.Issuer,
+                    Type = x.Type,
+                    Value = x.Value
+                })
+                .ToList();
+            return View(userClaimList);
+        }
+
+        [Authorize(Policy ="AnkaraPolicy")]
+        public IActionResult AnkaraPage()
+        {
+
+            return View();
+        }
+
         public IActionResult PasswordChange()
         {
             

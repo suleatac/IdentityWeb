@@ -26,6 +26,33 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="Admin" asp-controller="Home" asp-action="UserList">Kullanıcı Listesi</a>
                         </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle"
+                               href="#"
+                               id="roleDropdown"
+                               role="button"
+                               data-bs-toggle="dropdown"
+                               aria-expanded="false">
+                                Roller
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="roleDropdown">
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Roles" asp-action="Index">Rol Listesi</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Roles" asp-action="Create">Yeni Rol Ekle</a>
+                                </li>
+                                <li><hr class="dropdown-divider" /></li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="Admin" asp-controller="Roles" asp-action="Edit">Rol Güncelle</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-danger" asp-area="Admin" asp-controller="Roles" asp-action="Delete">Rol Sil</a>
+                                </li>
+                            </ul>
+                        </li>
+
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Ana sayfaya Dön</a>
                         </li>

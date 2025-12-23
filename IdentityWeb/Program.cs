@@ -1,8 +1,10 @@
+using IdentityWeb.ClaimProvider;
 using IdentityWeb.CustomValidations;
 using IdentityWeb.Localization;
 using IdentityWeb.Models;
 using IdentityWeb.OptionsModels;
 using IdentityWeb.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,6 +58,7 @@ builder.Services.ConfigureApplicationCookie(opt => {
     var cookieBuilder=new CookieBuilder();
     cookieBuilder.Name = "IdentiyWeb";
     opt.LoginPath= new PathString("/Home/SignIn");
+    opt.AccessDeniedPath = new PathString("/Member/AccessDenied");
     opt.Cookie= cookieBuilder;
     opt.ExpireTimeSpan= TimeSpan.FromDays(30);
     opt.SlidingExpiration = true;
@@ -74,7 +77,7 @@ builder.Services.Configure<EmailOption>(builder.Configuration.GetSection("EmailS
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
-
+builder.Services.AddScoped<IClaimsTransformation, UserClaimProvider>();
 
 //Kullanýcý resim ekleme iþlemleri
 //Klasöre eriþim için referans noktasý belirlendi
@@ -82,7 +85,14 @@ builder.Services.AddSingleton<IFileProvider>(new PhysicalFileProvider(Directory.
 
 
 
-
+builder.Services.AddAuthorization(options => {
+    options.AddPolicy("RequireAdminRole", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("RequireUserRole", policy => policy.RequireRole("User"));
+    options.AddPolicy("AnkaraPolicy", policy => 
+    { 
+        policy.RequireClaim("city", "Ankara"); 
+    });
+});
 
 
 var app = builder.Build();

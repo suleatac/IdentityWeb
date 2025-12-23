@@ -1,0 +1,46 @@
+﻿
+@{
+    ViewData["Title"] = "RoleAssignToUser";
+}
+
+<h1>Role Assign To User</h1>
+
+@model List<RoleAssignViewModel>
+
+
+
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="RoleAssignToUser" asp-route-UserId="@ViewBag.UserId" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            @for (int i=0; i<Model.Count;i++)
+                {
+                <div class="my-2 form-check">
+                    <label for="xxx" class="form-check-label"> @Model[i].Name</label>
+                    <input asp-for="@Model[i].Exist" class="form-check-input" />
+                    <span asp-validation-for="@Model[i].Exist" class="text-danger"></span>
+
+                    <input asp-for="@Model[i].Id" type="hidden" />
+                    <input asp-for="@Model[i].Name" type="hidden"  />
+
+                </div>
+                }
+         
+
+            <div class="form-group">
+                <input type="submit" value="Rol Ata" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-controller="Home" asp-action="UserList">Back to List</a>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
