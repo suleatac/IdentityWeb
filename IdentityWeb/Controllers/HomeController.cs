@@ -1,14 +1,16 @@
 using System.Diagnostics;
+using System.Security.Claims;
 using IdentityWeb.Models;
 using IdentityWeb.Services;
 using IdentityWeb.ViewModels;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace IdentityWeb.Controllers
 {
-    public class HomeController(UserManager<AppUser> userManager,SignInManager<AppUser> signInManager,IEmailService emailService) : Controller
+    public class HomeController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager, IEmailService emailService) : Controller
     {
         public IActionResult Index()
         {
@@ -20,8 +22,8 @@ namespace IdentityWeb.Controllers
             return View();
         }
 
-       
-        public  IActionResult SignUp()
+
+        public IActionResult SignUp()
         {
             return View();
         }
@@ -31,29 +33,41 @@ namespace IdentityWeb.Controllers
         {
 
 
-            if (!ModelState.IsValid) 
+            if (!ModelState.IsValid)
             {
                 return View();
 
             }
-            var identityResult= await userManager.CreateAsync(new AppUser { UserName=signUpViewModel.UserName,PhoneNumber=signUpViewModel.Phone,Email=signUpViewModel.Email}, signUpViewModel.Password);
-           
-            if (identityResult.Succeeded)
+            var identityResult = await userManager.CreateAsync(new AppUser { UserName = signUpViewModel.UserName, PhoneNumber = signUpViewModel.Phone, Email = signUpViewModel.Email }, signUpViewModel.Password);
+
+            if (!identityResult.Succeeded)
             {
-                TempData["SuccessMessage"] = "Üyelik kayýt iþlemi baþarýyla gerçekleþmiþtir";
+                foreach (IdentityError item in identityResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, item.Description);
+                }
+                return View();
+
+            }
+
+            var currentUser = await userManager.FindByEmailAsync(signUpViewModel.Email);
+            var exchangeClaim = new Claim("ExchangeExpireDate", DateTime.Now.AddDays(10).ToString());
+            var claimResult = await userManager.AddClaimAsync(currentUser!, exchangeClaim);
+
+            if (!claimResult.Succeeded)
+            {
+                foreach (var item in claimResult.Errors)
+                {
+                    ModelState.AddModelError(string.Empty, item.Description);
+                }
                 return View();
             }
-
-            foreach (IdentityError item in identityResult.Errors)
-            {
-                ModelState.AddModelError(string.Empty, item.Description);
-            }
-
-
-
-
+            TempData["SuccessMessage"] = "Üyelik kayýt iþlemi baþarýyla gerçekleþmiþtir";
             return View();
         }
+
+
+
 
         public IActionResult SignIn()
         {
@@ -61,7 +75,7 @@ namespace IdentityWeb.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> SignIn(SignInViewModel signInViewModel, string? returnUrl=null)
+        public async Task<IActionResult> SignIn(SignInViewModel signInViewModel, string? returnUrl = null)
         {
             if (!ModelState.IsValid)
             {
@@ -71,19 +85,21 @@ namespace IdentityWeb.Controllers
             returnUrl = returnUrl ?? Url.Action("Index", "Home");
 
             var hasUser = await userManager.FindByEmailAsync(signInViewModel.Email);
-            if (hasUser == null) 
+            if (hasUser == null)
             {
                 ModelState.AddModelError(string.Empty, "Email veya þifre yanlýþ");
                 return View();
 
             }
 
-            var result = await signInManager.PasswordSignInAsync(hasUser,signInViewModel.Password,signInViewModel.RememberMe,true);
-            if (result.Succeeded)
+            var passwordCheck = await userManager.CheckPasswordAsync(hasUser, signInViewModel.Password);
+            if (!passwordCheck)
             {
-               
-                return Redirect(returnUrl);
+                ModelState.AddModelError(string.Empty, "Email veya þifre yanlýþ");
+                return View();
             }
+
+            var result = await signInManager.PasswordSignInAsync(hasUser, signInViewModel.Password, signInViewModel.RememberMe, true);
             if (result.IsLockedOut)
             {
                 var failedAccessCount = await userManager.GetAccessFailedCountAsync(hasUser);
@@ -91,10 +107,26 @@ namespace IdentityWeb.Controllers
                 TempData["ErrorMessage"] = "3dk Boyunca giriþ yapamazsýnýz. Çok fazla deneme yaptýnýz.";
                 return View();
             }
+            if (!result.Succeeded)
+            {
+                ModelState.AddModelError(string.Empty, "Email veya þifre yanlýþ");
+                ModelState.AddModelError(string.Empty, $"Baþarýsýz giriþ denemesi={await userManager.GetAccessFailedCountAsync(hasUser)}");
+                return View();
+             
+            }
 
-            ModelState.AddModelError(string.Empty, "Email veya þifre yanlýþ");
-            
-            return View();
+            if (hasUser.BirthDate.HasValue)
+            {
+                await signInManager.SignInWithClaimsAsync(hasUser, signInViewModel.RememberMe, new[] {new Claim("birthdate", hasUser.BirthDate.Value.ToString())});
+            }
+
+
+           
+
+
+
+            return Redirect(returnUrl!);
+
         }
 
 
@@ -119,9 +151,9 @@ namespace IdentityWeb.Controllers
 
             }
             string passwordResetToken = await userManager.GeneratePasswordResetTokenAsync(hasUser);
-            var passwordResetLink = Url.Action("SetNewPassword", "Home", new {userId=hasUser.Id,Token=passwordResetToken },HttpContext.Request.Scheme, "localhost:7199");
+            var passwordResetLink = Url.Action("SetNewPassword", "Home", new { userId = hasUser.Id, Token = passwordResetToken }, HttpContext.Request.Scheme, "localhost:7199");
 
-             await emailService.SendResetEmail(passwordResetLink!, resetPasswordViewModel.Email);
+            await emailService.SendResetEmail(passwordResetLink!, resetPasswordViewModel.Email);
 
 
 

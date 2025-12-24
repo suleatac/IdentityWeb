@@ -29,6 +29,12 @@
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-area="" asp-controller="Member" asp-action="AnkaraPage">Ankara</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Member" asp-action="ExchangePage">Süreli sayfa</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Member" asp-action="ViolencePage">Yaş sınırlı Sayfa</a>
+                        </li>
                         @if (User.HasClaim(ClaimTypes.Role, "Admin"))
                             {
                             <li class="nav-item">

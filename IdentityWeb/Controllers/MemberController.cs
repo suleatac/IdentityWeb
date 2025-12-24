@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.FileProviders;
+using System.Collections.Generic;
+using System.Security.Claims;
 
 
 namespace IdentityWeb.Controllers
@@ -63,7 +65,18 @@ namespace IdentityWeb.Controllers
 
             return View();
         }
+        [Authorize(Policy = "ExchangeExpirePolicy")]
+        public IActionResult ExchangePage()
+        {
 
+            return View();
+        }
+        [Authorize(Policy = "ViolencePolicy")]
+        public IActionResult ViolencePage()
+        {
+
+            return View();
+        }
         public IActionResult PasswordChange()
         {
             
@@ -209,7 +222,10 @@ namespace IdentityWeb.Controllers
                 //await signInManager.RefreshSignInAsync(currentUser);
                 await signInManager.SignOutAsync();
                 await signInManager.SignInAsync(currentUser, true);
-
+                if (currentUser.BirthDate.HasValue)
+                {
+                    await signInManager.SignInWithClaimsAsync(currentUser, true, new[] { new Claim("birthdate", currentUser.BirthDate.Value.ToString()) });
+                }
 
                 TempData["SuccessMessage"] = "Profil başarıyla güncellendi.";
                 return RedirectToAction(nameof(Index));

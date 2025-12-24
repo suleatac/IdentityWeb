@@ -3,8 +3,12 @@ using IdentityWeb.CustomValidations;
 using IdentityWeb.Localization;
 using IdentityWeb.Models;
 using IdentityWeb.OptionsModels;
+using IdentityWeb.Permissions;
+using IdentityWeb.Requirements;
+using IdentityWeb.Seeds;
 using IdentityWeb.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -77,6 +81,8 @@ builder.Services.Configure<EmailOption>(builder.Configuration.GetSection("EmailS
 
 builder.Services.AddScoped<IEmailService, EmailService>();
 
+builder.Services.AddScoped<IAuthorizationHandler, ExchangeExpireRequirementHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, ViolenceRequirementHandler>();
 builder.Services.AddScoped<IClaimsTransformation, UserClaimProvider>();
 
 //Kullanýcý resim ekleme iþlemleri
@@ -92,18 +98,40 @@ builder.Services.AddAuthorization(options => {
     { 
         policy.RequireClaim("city", "Ankara"); 
     });
+    options.AddPolicy("ExchangeExpirePolicy", policy =>
+    {
+        policy.RequireClaim("ExchangeExpireDate");
+        policy.AddRequirements(new ExchangeExpireRequirement());
+    });
+    options.AddPolicy("ViolencePolicy", policy =>
+    {
+        policy.AddRequirements(new ViolenceRequirement { ThresholdAge = 18 });
+    });
+    options.AddPolicy("OrderPermissionReadorDelete", policy => {
+        policy.RequireClaim("Permission", PermissionRoot.Order.Read);
+        policy.RequireClaim("Permission", PermissionRoot.Order.Delete);
+    });
 });
 
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+using (var scope = app.Services.CreateScope())
 {
-    app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-    app.UseHsts();
+    var services = scope.ServiceProvider;
+    var roleManager = services.GetRequiredService<RoleManager<AppRole>>();
+    await PermissionSeed.SeedAsync(roleManager);
 }
+
+
+
+    // Configure the HTTP request pipeline.
+    if (!app.Environment.IsDevelopment())
+    {
+        app.UseExceptionHandler("/Home/Error");
+        // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+        app.UseHsts();
+    }
 
 app.UseHttpsRedirection();
 app.UseRouting();
